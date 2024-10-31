@@ -63,7 +63,7 @@ class Job(Scraper):
         
         driver.get(self.linkedin_url)
         self.focus()
-        self.job_title = self.wait_for_element_to_load(name="jobs-unified-top-card__job-title").text.strip()
+        self.job_title = self.wait_for_element_to_load(name="job-details-jobs-unified-top-card__job-title").find_element_by_tag_name("h1").text.strip()
         self.company = self.wait_for_element_to_load(name="jobs-unified-top-card__company-name").text.strip()
         self.company_linkedin_url = self.wait_for_element_to_load(name="jobs-unified-top-card__company-name").find_element_by_tag_name("a").get_attribute("href")
         self.location = self.wait_for_element_to_load(name="jobs-unified-top-card__bullet").text.strip()
