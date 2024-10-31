@@ -2,6 +2,11 @@
 
 Scrapes Linkedin User Data
 
+My personal modifications from fork:
+
+- Update selectors to properly fetch job data with updated HTML page structure as of Nov 2024
+- Export Data to CSV
+
 [Linkedin Scraper](#linkedin-scraper)
 * [Installation](#installation)
 * [Setup](#setup)
