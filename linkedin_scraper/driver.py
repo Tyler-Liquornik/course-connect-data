@@ -1,3 +1,5 @@
+import yaml
+import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -6,7 +8,18 @@ from linkedin_scraper.jobs import Job
 from linkedin_scraper.job_search import JobSearch
 import time
 
-print("Scraper Start")
+# Load configuration from YAML
+with open("config.yaml", "r") as file:
+    config = yaml.safe_load(file)
+
+# Configure logging
+if config.get("logging", {}).get("enabled", False):
+    logging_level = config["logging"].get("level", "INFO").upper()
+    logging.basicConfig(level=getattr(logging, logging_level))
+else:
+    logging.disable(logging.CRITICAL)  # Disable all logging if not enabled
+
+logging.debug("Scraper Start")
 
 # Initialize the driver
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
@@ -38,7 +51,7 @@ jobs_df = pd.DataFrame(columns=[
 # Extract details for each job and append directly to the DataFrame
 for idx, job_listing in enumerate(job_listings):
     try:
-        print(f"Processing job {idx+1}/{len(job_listings)}: {job_listing.linkedin_url}")
+        logging.debug(f"Processing job {idx+1}/{len(job_listings)}: {job_listing.linkedin_url}")
         # Create a Job object for each job listing to scrape all the details
         job = Job(job_listing.linkedin_url, driver=driver, scrape=True, close_on_complete=False)
         time.sleep(1)  # Be polite and avoid being blocked
@@ -49,11 +62,11 @@ for idx, job_listing in enumerate(job_listings):
         # Append the job_data to the DataFrame
         jobs_df = jobs_df.append(job_data, ignore_index=True)
 
-        # Optional: Print the scraped data for verification
-        print(f"Scraped data for job {idx+1}: {job_data}")
+        # Optional: Log the scraped data for verification
+        logging.debug(f"Scraped data for job {idx+1}: {job_data}")
 
     except Exception as e:
-        print(f"Error processing job {idx+1}: {e}")
+        logging.error(f"Error processing job {idx+1}: {e}")
 
 # Save to a CSV file
 csv_filename = "linkedin_software_engineer_jobs.csv"
@@ -61,4 +74,4 @@ jobs_df.to_csv(csv_filename, index=False)
 
 # Close the browser when done
 driver.quit()
-print(f"Scraping complete! Job data saved to {csv_filename}")
+logging.info(f"Scraping complete! Job data saved to {csv_filename}")
