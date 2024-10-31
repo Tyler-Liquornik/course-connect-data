@@ -51,19 +51,20 @@ jobs_df = pd.DataFrame(columns=[
 # Extract details for each job and append directly to the DataFrame
 for idx, job_listing in enumerate(job_listings):
     try:
-        logging.debug(f"Processing job {idx+1}/{len(job_listings)}: {job_listing.linkedin_url}")
+        logging.info(f"Processing job {idx+1}/{len(job_listings)}: {job_listing.linkedin_url}")
         # Create a Job object for each job listing to scrape all the details
         job = Job(job_listing.linkedin_url, driver=driver, scrape=True, close_on_complete=False)
         time.sleep(1)  # Be polite and avoid being blocked
 
         # Use the to_dict() method to get job data
         job_data = job.to_dict()
+        logging.info(job_data)
 
         # Append the job_data to the DataFrame
-        jobs_df = jobs_df.append(job_data, ignore_index=True)
+        jobs_df = pd.concat([jobs_df, pd.DataFrame([job_data])], ignore_index=True)
 
         # Optional: Log the scraped data for verification
-        logging.debug(f"Scraped data for job {idx+1}: {job_data}")
+        logging.info(f"Scraped data for job {idx+1}: {job_data}")
 
     except Exception as e:
         logging.error(f"Error processing job {idx+1}: {e}")
