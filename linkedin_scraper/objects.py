@@ -113,9 +113,8 @@ class Scraper:
 
             self.driver.find_element(By.CLASS_NAME, c.VERIFY_LOGIN_ID)
             return True
-        except Exception as e:
-            pass
-        return False
+        except:
+            return False
 
     def scroll_to_half(self):
         self.driver.execute_script(
@@ -137,24 +136,21 @@ class Scraper:
             self.driver.find_element(By.CLASS_NAME, class_name)
             return True
         except:
-            pass
-        return False
+            return False
 
     def __find_element_by_xpath__(self, tag_name):
         try:
             self.driver.find_element(By.XPATH,tag_name)
             return True
         except:
-            pass
-        return False
+            return False
 
     def __find_enabled_element_by_xpath__(self, tag_name):
         try:
             elem = self.driver.find_element(By.XPATH,tag_name)
             return elem.is_enabled()
         except:
-            pass
-        return False
+            return False
 
     @classmethod
     def __find_first_available_element__(cls, *args):

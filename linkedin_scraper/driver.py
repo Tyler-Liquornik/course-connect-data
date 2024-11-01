@@ -19,10 +19,11 @@ if config.get("logging", {}).get("enabled", False):
 else:
     logging.disable(logging.CRITICAL)  # Disable all logging if not enabled
 
-logging.debug("Scraper Start")
+logging.info("Scraper Start")
 
 # Initialize the driver
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+# driver = webdriver.Chrome(service=Service(ChromeDriverManager(driver_version="114.0.5735.90").install()))
 driver.maximize_window()
 
 # Open LinkedIn login page
@@ -33,7 +34,7 @@ search_query = "Software Engineer"
 
 # Perform the job search
 job_search = JobSearch(driver=driver, close_on_complete=False, scrape=False)
-job_listings = job_search.search(search_query)
+job_listings = job_search.search_all(search_query, 3)
 
 # Initialize an empty DataFrame with the exact fields from the Job class's to_dict() method
 jobs_df = pd.DataFrame(columns=[
@@ -43,9 +44,7 @@ jobs_df = pd.DataFrame(columns=[
     "company_linkedin_url",
     "location",
     "posted_date",
-    "applicant_count",
-    "job_description",
-    "benefits"
+    "job_description"
 ])
 
 # Extract details for each job and append directly to the DataFrame

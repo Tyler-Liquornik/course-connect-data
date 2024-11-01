@@ -1,10 +1,12 @@
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
-
+import logging
 from linkedin_scraper.objects import Scraper
 
 
 class Job(Scraper):
+    # Static variable to store the method for loading job description across instances
+    job_description_class = None
 
     def __init__(
         self,
@@ -39,7 +41,7 @@ class Job(Scraper):
         if self.is_signed_in():
             self.scrape_logged_in(close_on_complete=close_on_complete)
         else:
-            raise NotImplemented("This part is not implemented yet")
+            raise RuntimeError("Please log in")
 
     def to_dict(self):
         return {
@@ -51,7 +53,6 @@ class Job(Scraper):
             "posted_date": self.posted_date,
             "job_description": self.job_description,
         }
-
 
     def scrape_logged_in(self, close_on_complete=True):
         driver = self.driver
@@ -71,11 +72,41 @@ class Job(Scraper):
         self.location = description_container.find_element(By.XPATH, ".//div[1]/span[1]").text.strip()
         self.posted_date = description_container.find_element(By.XPATH, ".//div[1]/span[3]/span").text.strip()
 
-        job_description_elem = self.wait_for_element_to_load(name="jobs-description")
-        self.mouse_click(job_description_elem.find_element(By.TAG_NAME, "button"))
-        job_description_elem = self.wait_for_element_to_load(name="jobs-description")
-        job_description_elem.find_element(By.TAG_NAME, "button").click()
-        self.job_description = job_description_elem.text.strip()
+        # Suppress Selenium logs temporarily
+        selenium_logger = logging.getLogger('selenium.webdriver.remote.remote_connection')
+        previous_log_level = selenium_logger.getEffectiveLevel()
+        selenium_logger.setLevel(logging.ERROR)
+
+        # Attempt to load the job description using the stored method or determine it if unset
+        if Job.job_description_class is None:
+            try:
+                # Try the first method
+                job_description_elem = self.wait_for_element_to_load(name="jobs-description")
+                self.mouse_click(job_description_elem.find_element(By.TAG_NAME, "button"))
+                job_description_elem.find_element(By.TAG_NAME, "button").click()
+                Job.job_description_class = "jobs-description"  # Store the successful method
+                self.job_description = job_description_elem.text.strip()
+            except (NoSuchElementException, TimeoutException):
+                try:
+                    # Try the alternative method
+                    job_description_elem = self.wait_for_element_to_load(name="feed-shared-inline-show-more-text__see-more-less-toggle")
+                    self.mouse_click(job_description_elem.find_element(By.TAG_NAME, "button"))
+                    job_description_elem.find_element(By.TAG_NAME, "button").click()
+                    Job.job_description_class = "feed-shared-inline-show-more-text__see-more-less-toggle"  # Store the successful method
+                    self.job_description = job_description_elem.text.strip()
+                except (NoSuchElementException, TimeoutException):
+                    # Only log this if both methods fail to avoid 404 spam
+                    logging.info("No 'See more' button found for job description expansion.")
+                    self.job_description = ""
+        else:
+            # Use the stored method directly
+            job_description_elem = self.wait_for_element_to_load(name=Job.job_description_class)
+            self.mouse_click(job_description_elem.find_element(By.TAG_NAME, "button"))
+            job_description_elem.find_element(By.TAG_NAME, "button").click()
+            self.job_description = job_description_elem.text.strip()
+
+        # Restore previous logging level
+        selenium_logger.setLevel(previous_log_level)
 
         if close_on_complete:
             driver.close()
