@@ -32,9 +32,9 @@ input("Please manually log in to LinkedIn and press Enter here to continue...")
 
 search_query = "Software Engineer"
 
-# Perform the job search
+# Perform the job search to get incomplete job data
 job_search = JobSearch(driver=driver, close_on_complete=False, scrape=False)
-job_listings = job_search.search_all(search_query, 3)
+job_listings = job_search.search_pages_for_linkedin_urls(search_query, 6)
 
 # Initialize an empty DataFrame with the exact fields from the Job class's to_dict() method
 jobs_df = pd.DataFrame(columns=[
@@ -51,9 +51,9 @@ jobs_df = pd.DataFrame(columns=[
 for idx, job_listing in enumerate(job_listings):
     try:
         logging.info(f"Processing job {idx+1}/{len(job_listings)}: {job_listing.linkedin_url}")
-        # Create a Job object for each job listing to scrape all the details
+
+        # Initialization of the job object with the LinkedIn url will scrape out all the details for it
         job = Job(job_listing.linkedin_url, driver=driver, scrape=True, close_on_complete=False)
-        time.sleep(1)  # Be polite and avoid being blocked
 
         # Use the to_dict() method to get job data
         job_data = job.to_dict()
@@ -69,7 +69,7 @@ for idx, job_listing in enumerate(job_listings):
         logging.error(f"Error processing job {idx+1}: {e}")
 
 # Save to a CSV file
-csv_filename = "linkedin_software_engineer_jobs.csv"
+csv_filename = "linkedin_jobs.csv"
 jobs_df.to_csv(csv_filename, index=False)
 
 # Close the browser when done

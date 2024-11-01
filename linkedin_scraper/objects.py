@@ -62,7 +62,7 @@ class Accomplishment(Institution):
 @dataclass
 class Scraper:
     driver: Chrome = None
-    WAIT_FOR_ELEMENT_TIMEOUT = 5
+    WAIT_FOR_ELEMENT_TIMEOUT = 1
     TOP_CARD = "pv-top-card"
 
     @staticmethod

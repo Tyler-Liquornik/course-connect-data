@@ -61,16 +61,41 @@ class Job(Scraper):
         self.focus()
         self.job_title = self.wait_for_element_to_load(
             name="job-details-jobs-unified-top-card__job-title").find_element(By.TAG_NAME, "h1").text.strip()
-        self.company = self.wait_for_element_to_load(
-            name="job-details-jobs-unified-top-card__company-name").find_element(By.TAG_NAME, "a").text.strip()
-        self.company_linkedin_url = self.wait_for_element_to_load(
-            name="job-details-jobs-unified-top-card__company-name").find_element(By.TAG_NAME, "a").get_attribute("href")
+
+
+        logging.disable(logging.CRITICAL)
+
+        company_element = self.wait_for_element_to_load(name="job-details-jobs-unified-top-card__company-name")
+        company_link = company_element.find_elements(By.TAG_NAME, "a")
+
+        if company_link:
+            self.company = company_link[0].text.strip()
+            self.company_linkedin_url = company_link[0].get_attribute("href")
+        else:
+            self.company = company_element.text.strip()
+            self.company_linkedin_url = None
+
+        logging.disable(logging.NOTSET)
 
         description_container = self.wait_for_element_to_load(
             name="job-details-jobs-unified-top-card__primary-description-container"
         )
         self.location = description_container.find_element(By.XPATH, ".//div[1]/span[1]").text.strip()
-        self.posted_date = description_container.find_element(By.XPATH, ".//div[1]/span[3]/span").text.strip()
+
+        # Locate the container and check for any direct text content within .//div[1]/span[3]
+        date_container = description_container.find_element(By.XPATH, ".//div[1]/span[3]")
+        spans = date_container.find_elements(By.XPATH, "./span")
+
+        # Reposted case: if text is present and there are two spans, use the second span
+        if len(spans) == 2:
+            self.posted_date = spans[1].text.strip()
+        # Regular case: if only one span, use that one
+        elif len(spans) == 1:
+            self.posted_date = spans[0].text.strip()
+        # Recently posted case (bolded): if no spans, locate strong > span
+        else:
+            strong_span = date_container.find_element(By.XPATH, "./strong/span")
+            self.posted_date = strong_span.text.strip()
 
         # Suppress Selenium logs temporarily
         selenium_logger = logging.getLogger('selenium.webdriver.remote.remote_connection')
