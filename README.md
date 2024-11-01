@@ -4,7 +4,8 @@ Scrapes Linkedin User Data
 
 My personal modifications from fork:
 
-- Update selectors to properly fetch job data with updated HTML page structure as of Nov 2024
+- Updated to properly fetch job data with updated HTML page structure as of Nov 2024
+  - Includes work on UIs in A/B testing that render differently on different accounts  
 - Export Data to CSV
 
 [Linkedin Scraper](#linkedin-scraper)
@@ -138,7 +139,7 @@ job_search = JobSearch(driver=driver, close_on_complete=False, scrape=False)
 # - job_search.still_hiring
 # - job_search.more_jobs
 
-job_listings = job_search.search_page_for_linkedin_urls(
+job_listings = job_search.search_jobs_page_for_linkedin_urls(
   "Machine Learning Engineer")  # returns the list of `Job` from the first page
 ```
 

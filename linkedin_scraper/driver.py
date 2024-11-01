@@ -6,7 +6,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
 from linkedin_scraper.jobs import Job
 from linkedin_scraper.job_search import JobSearch
-import time
 
 # Load configuration from YAML
 with open("config.yaml", "r") as file:
@@ -34,7 +33,7 @@ search_query = "Software Engineer"
 
 # Perform the job search to get incomplete job data
 job_search = JobSearch(driver=driver, close_on_complete=False, scrape=False)
-job_listings = job_search.search_pages_for_linkedin_urls(search_query, 6)
+job_listings = job_search.search_jobs_pages_for_linkedin_urls(search_query, 6)
 
 # Initialize an empty DataFrame with the exact fields from the Job class's to_dict() method
 jobs_df = pd.DataFrame(columns=[

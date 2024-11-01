@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 def __prompt_email_password():
   u = input("Email: ")
   p = getpass.getpass(prompt="Password: ")
-  return (u, p)
+  return u, p
 
 def page_has_loaded(driver):
     page_state = driver.execute_script('return document.readyState;')

@@ -3,7 +3,6 @@ from selenium.webdriver.common.by import By
 import logging
 from linkedin_scraper.objects import Scraper
 
-
 class Job(Scraper):
     # Static variable to store the method for loading job description across instances
     job_description_class = None

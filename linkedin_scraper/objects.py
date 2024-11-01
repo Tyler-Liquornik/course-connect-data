@@ -1,10 +1,7 @@
 from dataclasses import dataclass
 from time import sleep
-
 from selenium.webdriver import Chrome
-
 from . import constants as c
-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait

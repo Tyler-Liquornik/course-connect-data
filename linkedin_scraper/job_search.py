@@ -9,8 +9,8 @@ from linkedin_scraper.objects import Scraper
 from linkedin_scraper.jobs import Job
 from selenium.webdriver.common.by import By
 
-
 class JobSearch(Scraper):
+
     AREAS = ["recommended_jobs", None, "still_hiring", "more_jobs"]
 
     def __init__(self, driver, base_url="https://www.linkedin.com/jobs/", close_on_complete=False, scrape=True,
@@ -23,16 +23,16 @@ class JobSearch(Scraper):
         self.create_or_reset_csv()
 
         if scrape:
-            self.scrape(close_on_complete, scrape_recommended_jobs)
+            self.scrape(scrape_recommended_jobs)
 
     def create_or_reset_csv(self):
         if os.path.exists(self.csv_filename):
             os.remove(self.csv_filename)
         pd.DataFrame(columns=["linkedin_url", "job_title", "company", "company_linkedin_url", "location", "posted_date", "job_description"]).to_csv(self.csv_filename, index=False)
 
-    def scrape(self, close_on_complete=True, scrape_recommended_jobs=True):
+    def scrape(self, scrape_recommended_jobs=True):
         if self.is_signed_in():
-            self.scrape_logged_in(close_on_complete=close_on_complete, scrape_recommended_jobs=scrape_recommended_jobs)
+            self.scrape_logged_in(scrape_recommended_jobs=scrape_recommended_jobs)
         else:
             raise NotImplementedError("This part is not implemented yet")
 
@@ -42,7 +42,7 @@ class JobSearch(Scraper):
         linkedin_url = job_div.get_attribute("href")
         return Job(linkedin_url=linkedin_url, scrape=False,driver=self.driver)
 
-    def scrape_logged_in(self, close_on_complete=True, scrape_recommended_jobs=True):
+    def scrape_logged_in(self, scrape_recommended_jobs=True):
         driver = self.driver
         driver.get(self.base_url)
         if scrape_recommended_jobs:
@@ -62,7 +62,7 @@ class JobSearch(Scraper):
         return
 
     # Each Job object has only the LinkedIn url so we can click on it and get job details from there
-    def search_page_for_linkedin_urls(self, search_term: str, click_to_first_page: bool = True) -> List[Job]:
+    def search_jobs_page_for_linkedin_urls(self, search_term: str, click_to_first_page: bool = True) -> List[Job]:
         if click_to_first_page:
             url = os.path.join(self.base_url, "search") + f"?keywords={urllib.parse.quote(search_term)}&refresh=true"
             self.driver.get(url)
@@ -92,45 +92,43 @@ class JobSearch(Scraper):
             job_results.append(job)
         return job_results
 
-    def search_pages_for_linkedin_urls(self, search_term: str, max_pages: int = sys.maxsize) -> List[Job]:
+    def search_jobs_pages_for_linkedin_urls(self, search_term: str, max_pages: int = sys.maxsize) -> List[Job]:
+        try:
+            return self.search_jobs_pages_for_linkedin_urls_with_next_button_pagination(search_term, max_pages)
+        except:
+            return self.search_jobs_pages_for_linkedin_urls_with_ellipsis_button_pagination(search_term, max_pages)
+
+    def search_jobs_pages_for_linkedin_urls_with_next_button_pagination(self, search_term: str, max_pages: int) -> List[Job]:
+        url = os.path.join(self.base_url, "search") + f"?keywords={urllib.parse.quote(search_term)}&refresh=true"
+        self.driver.get(url)
+
+        # Check for the next button to trigger an exception right away
         try:
             logging.disable(logging.CRITICAL)
             next_button = self.driver.find_element(By.XPATH, "//button[@aria-label='View next page']")
             logging.disable(logging.NOTSET)
-            return self.search_pages_for_linkedin_urls_with_next_button_pagination(search_term, max_pages)
-        except:
-            return self.search_pages_for_linkedin_urls_with_ellipsis_button_pagination(search_term, max_pages)
+        except Exception as e:
+            raise e
 
-    def search_pages_for_linkedin_urls_with_next_button_pagination(self, search_term: str, max_pages: int) -> List[Job]:
-        url = os.path.join(self.base_url, "search") + f"?keywords={urllib.parse.quote(search_term)}&refresh=true"
-        self.driver.get(url)
         self.focus()
         sleep(self.WAIT_FOR_ELEMENT_TIMEOUT)
-
         all_job_results = []
         current_page = 1
 
         while current_page <= max_pages:
-            job_results = self.search_page_for_linkedin_urls(search_term, False)
+            job_results = self.search_jobs_page_for_linkedin_urls(search_term, False)
             all_job_results.extend(job_results)
-
-            selenium_logger = logging.getLogger('selenium.webdriver.remote.remote_connection')
-            previous_log_level = selenium_logger.level
-            selenium_logger.setLevel(logging.ERROR)
-
-            next_buttons = self.driver.find_elements(By.XPATH, "//button[@aria-label='View next page']")
-            if next_buttons:
-                next_buttons[0].click()
+            next_button = self.driver.find_element(By.XPATH, "//button[@aria-label='View next page']")
+            if next_button:
+                next_button.click()
                 current_page += 1
                 sleep(self.WAIT_FOR_ELEMENT_TIMEOUT)
             else:
                 break
 
-            selenium_logger.setLevel(previous_log_level)
-
         return all_job_results
 
-    def search_pages_for_linkedin_urls_with_ellipsis_button_pagination(self, search_term: str, max_pages: int) -> List[Job]:
+    def search_jobs_pages_for_linkedin_urls_with_ellipsis_button_pagination(self, search_term: str, max_pages: int) -> List[Job]:
         url = os.path.join(self.base_url, "search") + f"?keywords={urllib.parse.quote(search_term)}&refresh=true"
         self.driver.get(url)
         self.focus()
@@ -140,7 +138,7 @@ class JobSearch(Scraper):
         current_page = 1
 
         while current_page <= max_pages:
-            job_results = self.search_page_for_linkedin_urls(search_term, False)
+            job_results = self.search_jobs_page_for_linkedin_urls(search_term, False)
             all_job_results.extend(job_results)
 
             try:
@@ -154,7 +152,6 @@ class JobSearch(Scraper):
                 else:
                     break
             except Exception as e:
-                logging.info(f"No more pages or pagination error: {e}")
                 break
 
         return all_job_results
