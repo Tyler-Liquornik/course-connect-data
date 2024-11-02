@@ -4,7 +4,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
-from linkedin_scraper.jobs import Job
+from linkedin_scraper.job import Job
 from linkedin_scraper.job_search import JobSearch
 
 # Load configuration from YAML
@@ -30,10 +30,11 @@ driver.get("https://www.linkedin.com/login")
 input("Please manually log in to LinkedIn and press Enter here to continue...")
 
 search_query = "Software Engineer"
+pages_to_scrape = 1
 
 # Perform the job search to get incomplete job data
 job_search = JobSearch(driver=driver, close_on_complete=False, scrape=False)
-job_listings = job_search.search_jobs_pages_for_linkedin_urls(search_query, 6)
+job_listings = job_search.search_jobs_pages_for_linkedin_urls(search_query, pages_to_scrape)
 
 # Initialize an empty DataFrame with the exact fields from the Job class's to_dict() method
 jobs_df = pd.DataFrame(columns=[

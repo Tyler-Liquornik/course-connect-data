@@ -31,16 +31,10 @@ class Job(Scraper):
         self.job_description = job_description
 
         if scrape:
-            self.scrape(close_on_complete)
+            self.check_signed_in_and_scrape_from_linkedin_url(close_on_complete)
 
     def __repr__(self):
         return f"<Job {self.job_title} {self.company}>"
-
-    def scrape(self, close_on_complete=True):
-        if self.is_signed_in():
-            self.scrape_logged_in(close_on_complete=close_on_complete)
-        else:
-            raise RuntimeError("Please log in")
 
     def to_dict(self):
         return {
@@ -53,14 +47,19 @@ class Job(Scraper):
             "job_description": self.job_description,
         }
 
-    def scrape_logged_in(self, close_on_complete=True):
+    def check_signed_in_and_scrape_from_linkedin_url(self, close_on_complete=True):
+        if self.is_signed_in():
+            self.scrape_data_from_linkedin_url(close_on_complete=close_on_complete)
+        else:
+            raise RuntimeError("Please log in")
+
+    def scrape_data_from_linkedin_url(self, close_on_complete=True):
         driver = self.driver
 
         driver.get(self.linkedin_url)
         self.focus()
         self.job_title = self.wait_for_element_to_load(
             name="job-details-jobs-unified-top-card__job-title").find_element(By.TAG_NAME, "h1").text.strip()
-
 
         logging.disable(logging.CRITICAL)
 
@@ -112,15 +111,13 @@ class Job(Scraper):
                 self.job_description = job_description_elem.text.strip()
             except (NoSuchElementException, TimeoutException):
                 try:
-                    # Try the alternative method
-                    job_description_elem = self.wait_for_element_to_load(name="feed-shared-inline-show-more-text__see-more-less-toggle")
-                    self.mouse_click(job_description_elem.find_element(By.TAG_NAME, "button"))
-                    job_description_elem.find_element(By.TAG_NAME, "button").click()
-                    Job.job_description_class = "feed-shared-inline-show-more-text__see-more-less-toggle"  # Store the successful method
+                    job_description_elem = self.wait_for_element_to_load(name="feed-shared-inline-show-more-text")
+                    show_more_button = job_description_elem.find_element(By.TAG_NAME, "button")
+                    self.mouse_click(show_more_button)
+                    show_more_button.click()
+                    Job.job_description_class = "feed-shared-inline-show-more-text"
                     self.job_description = job_description_elem.text.strip()
                 except (NoSuchElementException, TimeoutException):
-                    # Only log this if both methods fail to avoid 404 spam
-                    logging.info("No 'See more' button found for job description expansion.")
                     self.job_description = ""
         else:
             # Use the stored method directly
@@ -128,6 +125,14 @@ class Job(Scraper):
             self.mouse_click(job_description_elem.find_element(By.TAG_NAME, "button"))
             job_description_elem.find_element(By.TAG_NAME, "button").click()
             self.job_description = job_description_elem.text.strip()
+
+        # In this "see more button..." UI there may be extra job requirements
+        if Job.job_description_class == "feed-shared-inline-show-more-text":
+            try:
+                extra_requirements = self.wait_for_element_to_load(name="job-details-about-the-job-module__section")
+                self.job_description += " ||| " + extra_requirements.text.strip()
+            except:
+                pass
 
         # Restore previous logging level
         selenium_logger.setLevel(previous_log_level)

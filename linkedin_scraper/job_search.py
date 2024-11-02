@@ -6,7 +6,7 @@ from time import sleep
 import urllib.parse
 import pandas as pd
 from linkedin_scraper.objects import Scraper
-from linkedin_scraper.jobs import Job
+from linkedin_scraper.job import Job
 from selenium.webdriver.common.by import By
 
 class JobSearch(Scraper):
@@ -26,9 +26,18 @@ class JobSearch(Scraper):
             self.scrape(scrape_recommended_jobs)
 
     def create_or_reset_csv(self):
-        if os.path.exists(self.csv_filename):
-            os.remove(self.csv_filename)
-        pd.DataFrame(columns=["linkedin_url", "job_title", "company", "company_linkedin_url", "location", "posted_date", "job_description"]).to_csv(self.csv_filename, index=False)
+        # Repeatedly prompt the user to close the CSV file in exce (it can't be open to add the data to it)
+        while True:
+            try:
+                if os.path.exists(self.csv_filename):
+                    os.remove(self.csv_filename)
+                pd.DataFrame(
+                    columns=["linkedin_url", "job_title", "company", "company_linkedin_url", "location", "posted_date",
+                             "job_description"]).to_csv(self.csv_filename, index=False)
+                logging.info("CSV file created or reset successfully.")
+                break
+            except PermissionError:
+                input("Please close " + self.csv_filename + " (probably in Excel) and press Enter to retry...")
 
     def scrape(self, scrape_recommended_jobs=True):
         if self.is_signed_in():

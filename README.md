@@ -156,8 +156,9 @@ person = Person("https://www.linkedin.com/in/andre-iguodala-65b48ab5", driver = 
 4. Login to Linkedin
 5. [OPTIONAL] Logout of Linkedin
 6. In the same `ipython`/`python` code, run
+
 ```python
-person.scrape()
+person.check_signed_in_and_scrape_from_linkedin_url()
 ```
 
 The reason is that LinkedIn has recently blocked people from viewing certain profiles without having previously signed in. So by setting `scrape=False`, it doesn't automatically scrape the profile, but Chrome will open the linkedin page anyways. You can login and logout, and the cookie will stay in the browser and it won't affect your profile views. Then when you run `person.scrape()`, it'll scrape and close the browser. If you want to keep the browser on so you can scrape others, run it as 
@@ -165,7 +166,7 @@ The reason is that LinkedIn has recently blocked people from viewing certain pro
 **NOTE**: For version >= `2.1.0`, scraping can also occur while logged in. Beware that users will be able to see that you viewed their profile.
 
 ```python
-person.scrape(close_on_complete=False)
+person.check_signed_in_and_scrape_from_linkedin_url(close_on_complete=False)
 ``` 
 so it doesn't close.
 
