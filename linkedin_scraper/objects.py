@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from time import sleep
 from selenium.webdriver import Chrome
-from . import constants as c
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+# Part of the code in here is legacy from the fork and unused in my work at the moment
 
 @dataclass
 class Contact:
@@ -103,12 +103,12 @@ class Scraper:
                 EC.presence_of_element_located(
                     (
                         By.CLASS_NAME,
-                        c.VERIFY_LOGIN_ID,
+                        "global-nav__primary-link",
                     )
                 )
             )
 
-            self.driver.find_element(By.CLASS_NAME, c.VERIFY_LOGIN_ID)
+            self.driver.find_element(By.CLASS_NAME, "global-nav__primary-link")
             return True
         except:
             return False

@@ -6,6 +6,7 @@ from selenium.common.exceptions import NoSuchElementException
 from .objects import Experience, Education, Scraper, Interest, Accomplishment, Contact
 import os
 
+# This code in here is legacy from the fork and unused in my work at the moment
 
 class Person(Scraper):
 

@@ -9,7 +9,7 @@ from linkedin_scraper.objects import Scraper
 from linkedin_scraper.job import Job
 from selenium.webdriver.common.by import By
 
-class JobSearch(Scraper):
+class JobBase(Scraper):
 
     AREAS = ["recommended_jobs", None, "still_hiring", "more_jobs"]
 
@@ -26,13 +26,13 @@ class JobSearch(Scraper):
             self.scrape(scrape_recommended_jobs)
 
     def create_or_reset_csv(self):
-        # Repeatedly prompt the user to close the CSV file in exce (it can't be open to add the data to it)
+        # Repeatedly prompt the user to close the CSV file in excel (it can't be open to add the data to it)
         while True:
             try:
                 if os.path.exists(self.csv_filename):
                     os.remove(self.csv_filename)
                 pd.DataFrame(
-                    columns=["linkedin_url", "job_title", "company", "company_linkedin_url", "location", "posted_date",
+                    columns=["linkedin_job_id", "linkedin_url", "job_title", "company", "company_linkedin_url", "location", "posted_date",
                              "job_description"]).to_csv(self.csv_filename, index=False)
                 logging.info("CSV file created or reset successfully.")
                 break
@@ -49,7 +49,7 @@ class JobSearch(Scraper):
     def scrape_linkedin_url(self, base_element) -> Job:
         job_div = self.wait_for_element_to_load(name="job-card-list__title", base=base_element)
         linkedin_url = job_div.get_attribute("href")
-        return Job(linkedin_url=linkedin_url, scrape=False,driver=self.driver)
+        return Job(linkedin_url=linkedin_url, scrape=False, driver=self.driver)
 
     def scrape_logged_in(self, scrape_recommended_jobs=True):
         driver = self.driver

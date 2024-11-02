@@ -3,7 +3,7 @@ from .person import Person
 from .objects import Institution, Experience, Education, Contact
 from .company import Company
 from .job import Job
-from .job_search import JobSearch
+from .job_base import JobBase
 
 __version__ = "2.11.4"
 

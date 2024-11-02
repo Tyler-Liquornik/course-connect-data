@@ -1,27 +1,46 @@
+import re
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 import logging
 from linkedin_scraper.objects import Scraper
+
+
+def extract_job_id(url: str) -> int:
+    # Regular expression to find the job ID
+    match = re.search(r'linkedin.com/jobs/view/(\d+)', url)
+    if match:
+        try:
+            job_id = int(match.group(1))
+            return job_id
+        except ValueError:
+            raise
+    else:
+        return 0  # Flag for error extracting id
+
 
 class Job(Scraper):
     # Static variable to store the method for loading job description across instances
     job_description_class = None
 
     def __init__(
-        self,
-        linkedin_url=None,
-        job_title=None,
-        company=None,
-        company_linkedin_url=None,
-        location=None,
-        posted_date=None,
-        job_description=None,
-        driver=None,
-        close_on_complete=True,
-        scrape=True,
+            self,
+            linkedin_url=None,
+            job_title=None,
+            company=None,
+            company_linkedin_url=None,
+            location=None,
+            posted_date=None,
+            job_description=None,
+            driver=None,
+            close_on_complete=True,
+            scrape=True,
     ):
         super().__init__()
+
+        # Extract the job ID from the URL, if provided
         self.linkedin_url = linkedin_url
+        self.linkedin_job_id = extract_job_id(linkedin_url) if linkedin_url else None
+
         self.job_title = job_title
         self.driver = driver
         self.company = company
@@ -38,6 +57,7 @@ class Job(Scraper):
 
     def to_dict(self):
         return {
+            "linkedin_job_id": self.linkedin_job_id,
             "linkedin_url": self.linkedin_url,
             "job_title": self.job_title,
             "company": self.company,
@@ -80,34 +100,27 @@ class Job(Scraper):
         )
         self.location = description_container.find_element(By.XPATH, ".//div[1]/span[1]").text.strip()
 
-        # Locate the container and check for any direct text content within .//div[1]/span[3]
         date_container = description_container.find_element(By.XPATH, ".//div[1]/span[3]")
         spans = date_container.find_elements(By.XPATH, "./span")
 
-        # Reposted case: if text is present and there are two spans, use the second span
         if len(spans) == 2:
             self.posted_date = spans[1].text.strip()
-        # Regular case: if only one span, use that one
         elif len(spans) == 1:
             self.posted_date = spans[0].text.strip()
-        # Recently posted case (bolded): if no spans, locate strong > span
         else:
             strong_span = date_container.find_element(By.XPATH, "./strong/span")
             self.posted_date = strong_span.text.strip()
 
-        # Suppress Selenium logs temporarily
         selenium_logger = logging.getLogger('selenium.webdriver.remote.remote_connection')
         previous_log_level = selenium_logger.getEffectiveLevel()
         selenium_logger.setLevel(logging.ERROR)
 
-        # Attempt to load the job description using the stored method or determine it if unset
         if Job.job_description_class is None:
             try:
-                # Try the first method
                 job_description_elem = self.wait_for_element_to_load(name="jobs-description")
                 self.mouse_click(job_description_elem.find_element(By.TAG_NAME, "button"))
                 job_description_elem.find_element(By.TAG_NAME, "button").click()
-                Job.job_description_class = "jobs-description"  # Store the successful method
+                Job.job_description_class = "jobs-description"
                 self.job_description = job_description_elem.text.strip()
             except (NoSuchElementException, TimeoutException):
                 try:
@@ -120,13 +133,11 @@ class Job(Scraper):
                 except (NoSuchElementException, TimeoutException):
                     self.job_description = ""
         else:
-            # Use the stored method directly
             job_description_elem = self.wait_for_element_to_load(name=Job.job_description_class)
             self.mouse_click(job_description_elem.find_element(By.TAG_NAME, "button"))
             job_description_elem.find_element(By.TAG_NAME, "button").click()
             self.job_description = job_description_elem.text.strip()
 
-        # In this "see more button..." UI there may be extra job requirements
         if Job.job_description_class == "feed-shared-inline-show-more-text":
             try:
                 extra_requirements = self.wait_for_element_to_load(name="job-details-about-the-job-module__section")
@@ -134,7 +145,6 @@ class Job(Scraper):
             except:
                 pass
 
-        # Restore previous logging level
         selenium_logger.setLevel(previous_log_level)
 
         if close_on_complete:

@@ -1,8 +1,9 @@
 import getpass
-from . import constants as c
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+
+# This code in here is legacy from the fork and unused in my work at the moment
 
 def __prompt_email_password():
   u = input("Email: ")
@@ -31,11 +32,11 @@ def login(driver, email=None, password=None, cookie = None, timeout=10):
     password_elem.submit()
   
     if driver.current_url == 'https://www.linkedin.com/checkpoint/lg/login-submit':
-        remember = driver.find_element(By.ID,c.REMEMBER_PROMPT)
+        remember = driver.find_element(By.ID, "remember-me-prompt__form-primary")
         if remember:
             remember.submit()
   
-    element = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.CLASS_NAME, c.VERIFY_LOGIN_ID)))
+    element = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.CLASS_NAME, "global-nav__primary-link")))
   
 def _login_with_cookie(driver, cookie):
     driver.get("https://www.linkedin.com/login")

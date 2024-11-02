@@ -8,6 +8,8 @@ import time
 import os
 import json
 
+# This code in here is legacy from the fork and unused in my work at the moment
+
 AD_BANNER_CLASSNAME = ('ad-banner-container', '__ad')
 
 def getchildren(elem):
