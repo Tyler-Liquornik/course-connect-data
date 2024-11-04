@@ -30,11 +30,12 @@ driver.get("https://www.linkedin.com/login")
 input("Please manually log in to LinkedIn and press Enter here to continue...")
 
 search_query = "Software Engineer"
-pages_to_scrape = 1
+pages_to_scrape = 100 # Note that LinkedIn only generates 40 pages, anything >40 will act as 40
 
 # Perform the job search to get incomplete job data
 job_search = JobBase(driver=driver, close_on_complete=False, scrape=False)
-job_listings = job_search.search_jobs_pages_for_linkedin_urls(search_query , pages_to_scrape)
+job_listings = job_search.search_jobs_pages_for_linkedin_urls(search_query , pages_to_scrape
+                                                              )
 
 # Initialize an empty DataFrame with the exact fields from the Job class's to_dict() method
 jobs_df = pd.DataFrame(columns=[
@@ -58,7 +59,7 @@ for idx, job_listing in enumerate(job_listings):
 
         # Use the to_dict() method to get job data
         job_data = job.to_dict()
-        logging.info(job_data)
+        logging.debug(job_data)
 
         # Append the job_data to the DataFrame
         jobs_df = pd.concat([jobs_df, pd.DataFrame([job_data])], ignore_index=True)

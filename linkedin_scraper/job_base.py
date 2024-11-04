@@ -137,7 +137,8 @@ class JobBase(Scraper):
 
         return all_job_results
 
-    def search_jobs_pages_for_linkedin_urls_with_ellipsis_button_pagination(self, search_term: str, max_pages: int) -> List[Job]:
+    def search_jobs_pages_for_linkedin_urls_with_ellipsis_button_pagination(self, search_term: str, max_pages: int) -> \
+    List[Job]:
         url = os.path.join(self.base_url, "search") + f"?keywords={urllib.parse.quote(search_term)}&refresh=true"
         self.driver.get(url)
         self.focus()
@@ -147,20 +148,26 @@ class JobBase(Scraper):
         current_page = 1
 
         while current_page <= max_pages:
+            # Collect job results on the current page
             job_results = self.search_jobs_page_for_linkedin_urls(search_term, False)
             all_job_results.extend(job_results)
 
             try:
-                pagination_buttons_container = self.driver.find_element(By.CLASS_NAME, "jobs-search-results-list__pagination").find_element(By.XPATH, ".//*")
-                pagination_buttons_li_wrapped_list = pagination_buttons_container.find_elements(By.XPATH, "./*")
-                pagination_buttons = [li.find_element(By.TAG_NAME, "button") for li in pagination_buttons_li_wrapped_list]
-                if current_page < len(pagination_buttons):
-                    pagination_buttons[current_page].click()
+                # Find the pagination container and locate the selected (current) page button
+                pagination_container = self.driver.find_element(By.CLASS_NAME, "jobs-search-results-list__pagination")
+                selected_button = pagination_container.find_element(By.XPATH,
+                                                                    ".//li[contains(@class, 'active')]/button")
+
+                # Try to find the next sibling of the selected button's parent <li> element
+                next_li = selected_button.find_element(By.XPATH, "../following-sibling::li/button")
+
+                if next_li and current_page < max_pages:
+                    next_li.click()
                     current_page += 1
                     sleep(self.WAIT_FOR_ELEMENT_TIMEOUT)
                 else:
                     break
-            except Exception as e:
+            except Exception:
                 break
 
         return all_job_results
