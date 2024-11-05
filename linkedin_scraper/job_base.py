@@ -33,7 +33,7 @@ class JobBase(Scraper):
                     os.remove(self.csv_filename)
                 pd.DataFrame(
                     columns=["linkedin_job_id", "linkedin_url", "job_title", "company", "company_linkedin_url", "location", "posted_date",
-                             "job_description"]).to_csv(self.csv_filename, index=False)
+                             "job_description", "search_query", "search_date"]).to_csv(self.csv_filename, index=False)
                 logging.info("CSV file created or reset successfully.")
                 break
             except PermissionError:

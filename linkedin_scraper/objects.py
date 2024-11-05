@@ -1,5 +1,8 @@
+import logging
 from dataclasses import dataclass
 from time import sleep
+
+from selenium.common import NoAlertPresentException, TimeoutException
 from selenium.webdriver import Chrome
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -68,7 +71,11 @@ class Scraper:
 
     def focus(self):
         self.driver.execute_script('alert("Focus window")')
-        self.driver.switch_to.alert.accept()
+        try:
+            WebDriverWait(self.driver, 10).until(EC.alert_is_present())
+            self.driver.switch_to.alert.accept()
+        except (NoAlertPresentException, TimeoutException):
+            logging.warning("No alert found to accept.")
 
     def mouse_click(self, elem):
         action = webdriver.ActionChains(self.driver)
