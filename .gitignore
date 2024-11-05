@@ -13,3 +13,4 @@ scrape.py
 creds.json
 venv
 *.zip
+./linkedin_scraper/config.yaml
