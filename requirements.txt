@@ -8,3 +8,6 @@ pandas~=2.2.3
 webdriver-manager~=4.0.2
 pymongo~=4.10.1
 spacy~=3.8.2
+scikit-learn~=1.5.2
+langdetect~=1.0.9
+googletrans~=4.0.0-rc1

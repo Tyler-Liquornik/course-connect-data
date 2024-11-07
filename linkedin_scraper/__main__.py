@@ -4,12 +4,12 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
-from linkedin_scraper.job import Job
-from linkedin_scraper.job_base import JobBase
+from linkedin_scraper.job_scraper import Job
+from linkedin_scraper.job_base_scraper import JobBase
 from datetime import datetime
 import os
 from mongo_client import get_database
-from job_tokenizer import JobTokenizer
+from job_processor import JobProcessor
 from bson import ObjectId
 
 # Load configuration from YAML
@@ -61,7 +61,7 @@ driver.get("https://www.linkedin.com/login")
 input("Please manually log in to LinkedIn and press Enter here to continue...")
 
 search_query = input("Enter your job search term: ")
-pages_to_scrape = 3  # LinkedIn only generates up to 40 pages, >40 acts as 40 pages
+pages_to_scrape = 1  # LinkedIn only generates up to 40 pages, >40 acts as 40 pages
 
 job_search = JobBase(driver=driver, close_on_complete=False, scrape=False)
 job_listings = job_search.search_jobs_pages_for_linkedin_urls(search_query, pages_to_scrape)
@@ -92,3 +92,8 @@ for idx, job_listing in enumerate(job_listings):
 # Close the browser when done
 driver.quit()
 logging.info("Scraping complete!")
+
+# Instantiate and run the tokenizer on specific jobs after scraping
+if config["save_data_to"] == "MONGO" and job_ids:
+    tokenizer = JobProcessor()  # Instantiate the JobTokenizer class
+    tokenizer.process_jobs(job_ids)  # Pass the list of inserted job IDs for processing

@@ -5,8 +5,8 @@ from typing import List
 from time import sleep
 import urllib.parse
 import pandas as pd
-from linkedin_scraper.objects import Scraper
-from linkedin_scraper.job import Job
+from linkedin_scraper.scraper import Scraper
+from linkedin_scraper.job_scraper import Job
 from selenium.webdriver.common.by import By
 
 class JobBase(Scraper):

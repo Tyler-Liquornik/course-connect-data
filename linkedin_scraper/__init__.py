@@ -1,9 +1,9 @@
 from os.path import dirname, basename, isfile
 from .person import Person
-from .objects import Institution, Experience, Education, Contact
+from .scraper import Institution, Experience, Education, Contact
 from .company import Company
-from .job import Job
-from .job_base import JobBase
+from .job_scraper import Job
+from .job_base_scraper import JobBase
 
 __version__ = "2.11.4"
 

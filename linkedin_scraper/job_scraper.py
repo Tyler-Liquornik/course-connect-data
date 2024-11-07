@@ -2,7 +2,7 @@ import re
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 import logging
-from linkedin_scraper.objects import Scraper
+from linkedin_scraper.scraper import Scraper
 
 
 def extract_job_id(url: str) -> int:

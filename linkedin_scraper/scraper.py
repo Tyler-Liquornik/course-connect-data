@@ -9,56 +9,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-# Part of the code in here is legacy from the fork and unused in my work at the moment
-
-@dataclass
-class Contact:
-    name: str = None
-    occupation: str = None
-    url: str = None
-
-
-@dataclass
-class Institution:
-    institution_name: str = None
-    linkedin_url: str = None
-    website: str = None
-    industry: str = None
-    type: str = None
-    headquarters: str = None
-    company_size: int = None
-    founded: int = None
-
-
-@dataclass
-class Experience(Institution):
-    from_date: str = None
-    to_date: str = None
-    description: str = None
-    position_title: str = None
-    duration: str = None
-    location: str = None
-
-
-@dataclass
-class Education(Institution):
-    from_date: str = None
-    to_date: str = None
-    description: str = None
-    degree: str = None
-
-
-@dataclass
-class Interest(Institution):
-    title = None
-
-
-@dataclass
-class Accomplishment(Institution):
-    category = None
-    title = None
-
-
 @dataclass
 class Scraper:
     driver: Chrome = None

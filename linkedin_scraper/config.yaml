@@ -1,9 +1,0 @@
-save_data_to: MONGO  # {MONGO, CSV}
-logging:
-  enabled: true
-  level: INFO # {DEBUG, INFO, WARNING, ERROR, CRITICAL}
-mongo:
-  username: "tyler_liquornik"
-  password: ""
-  cluster_url: "linkedinscrapercluster.0eqyf.mongodb.net"
-  database: "LinkedInScraperDB"
