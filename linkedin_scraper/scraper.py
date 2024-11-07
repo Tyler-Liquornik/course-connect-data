@@ -84,30 +84,3 @@ class Scraper:
         self.driver.execute_script(
             f'elem = document.getElementsByClassName("{class_name}")[0]; elem.scrollTo(0, elem.scrollHeight*{str(page_percent)});'
         )
-
-    def __find_element_by_class_name__(self, class_name):
-        try:
-            self.driver.find_element(By.CLASS_NAME, class_name)
-            return True
-        except:
-            return False
-
-    def __find_element_by_xpath__(self, tag_name):
-        try:
-            self.driver.find_element(By.XPATH,tag_name)
-            return True
-        except:
-            return False
-
-    def __find_enabled_element_by_xpath__(self, tag_name):
-        try:
-            elem = self.driver.find_element(By.XPATH,tag_name)
-            return elem.is_enabled()
-        except:
-            return False
-
-    @classmethod
-    def __find_first_available_element__(cls, *args):
-        for elem in args:
-            if elem:
-                return elem[0]
