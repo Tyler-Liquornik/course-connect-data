@@ -11,3 +11,4 @@ spacy~=3.8.2
 scikit-learn~=1.5.2
 langdetect~=1.0.9
 googletrans~=4.0.0-rc1
+mongoengine~=0.29.1

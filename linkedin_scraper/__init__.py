@@ -1,9 +1,6 @@
 from os.path import dirname, basename, isfile
-from .person import Person
-from .scraper import Institution, Experience, Education, Contact
-from .company import Company
-from .job_scraper import Job
-from .job_base_scraper import JobBase
+from linkedin_scraper.scraper.job_scraper import JobScraper
+from linkedin_scraper.scraper.job_url_scraper import JobUrlScraper
 
 __version__ = "2.11.4"
 

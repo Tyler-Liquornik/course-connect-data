@@ -4,13 +4,12 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
-from linkedin_scraper.job_scraper import Job
-from linkedin_scraper.job_base_scraper import JobBase
+from linkedin_scraper.scraper.job_scraper import JobScraper
+from linkedin_scraper.scraper.job_url_scraper import JobUrlScraper
 from datetime import datetime
 import os
 from mongo_client import get_database
-from job_processor import JobProcessor
-from bson import ObjectId
+from linkedin_scraper.service.job_processor_service import JobProcessor
 
 # Load configuration from YAML
 with open("config.yaml") as file:
@@ -63,13 +62,13 @@ input("Please manually log in to LinkedIn and press Enter here to continue...")
 search_query = input("Enter your job search term: ")
 pages_to_scrape = 1  # LinkedIn only generates up to 40 pages, >40 acts as 40 pages
 
-job_search = JobBase(driver=driver, close_on_complete=False, scrape=False)
+job_search = JobUrlScraper(driver=driver, close_on_complete=False, scrape=False)
 job_listings = job_search.search_jobs_pages_for_linkedin_urls(search_query, pages_to_scrape)
 
 for idx, job_listing in enumerate(job_listings):
     try:
         logging.info(f"Processing job {idx+1}/{len(job_listings)}: {job_listing.linkedin_url}")
-        job = Job(job_listing.linkedin_url, driver=driver, scrape=True, close_on_complete=False)
+        job = JobScraper(job_listing.linkedin_url, driver=driver, scrape=True, close_on_complete=False)
         job_data = job.to_dict()
         job_data["search_query"] = search_query
         job_data["search_date"] = datetime.today().strftime("%Y-%m-%d")

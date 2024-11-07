@@ -2,23 +2,11 @@ import re
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 import logging
-from linkedin_scraper.scraper import Scraper
 
+from linkedin_scraper.document.job_document import JobDocument
+from linkedin_scraper.scraper.base_scraper import BaseScraper
 
-def extract_job_id(url: str) -> int:
-    # Regular expression to find the job ID
-    match = re.search(r'linkedin.com/jobs/view/(\d+)', url)
-    if match:
-        try:
-            job_id = int(match.group(1))
-            return job_id
-        except ValueError:
-            raise
-    else:
-        return 0  # Flag for error extracting id
-
-
-class Job(Scraper):
+class JobScraper(BaseScraper):
     # Static variable to store the method for loading job description across instances
     job_description_class = None
 
@@ -54,6 +42,18 @@ class Job(Scraper):
 
     def __repr__(self):
         return f"<Job {self.job_title} {self.company}>"
+
+    def to_document(self):
+        return JobDocument(
+            linkedin_job_id=self.linkedin_job_id,
+            linkedin_url=self.linkedin_url,
+            job_title=self.job_title,
+            company=self.company,
+            company_linkedin_url=self.company_linkedin_url,
+            location=self.location,
+            posted_date=self.posted_date,
+            job_description=self.job_description,
+        )
 
     def to_dict(self):
         return {
@@ -115,12 +115,12 @@ class Job(Scraper):
         previous_log_level = selenium_logger.getEffectiveLevel()
         selenium_logger.setLevel(logging.ERROR)
 
-        if Job.job_description_class is None:
+        if JobScraper.job_description_class is None:
             try:
                 job_description_elem = self.wait_for_element_to_load(name="jobs-description")
                 self.mouse_click(job_description_elem.find_element(By.TAG_NAME, "button"))
                 job_description_elem.find_element(By.TAG_NAME, "button").click()
-                Job.job_description_class = "jobs-description"
+                JobScraper.job_description_class = "jobs-description"
                 self.job_description = job_description_elem.text.strip()
             except (NoSuchElementException, TimeoutException):
                 try:
@@ -128,17 +128,17 @@ class Job(Scraper):
                     show_more_button = job_description_elem.find_element(By.TAG_NAME, "button")
                     self.mouse_click(show_more_button)
                     show_more_button.click()
-                    Job.job_description_class = "feed-shared-inline-show-more-text"
+                    JobScraper.job_description_class = "feed-shared-inline-show-more-text"
                     self.job_description = job_description_elem.text.strip()
                 except (NoSuchElementException, TimeoutException):
                     self.job_description = ""
         else:
-            job_description_elem = self.wait_for_element_to_load(name=Job.job_description_class)
+            job_description_elem = self.wait_for_element_to_load(name=JobScraper.job_description_class)
             self.mouse_click(job_description_elem.find_element(By.TAG_NAME, "button"))
             job_description_elem.find_element(By.TAG_NAME, "button").click()
             self.job_description = job_description_elem.text.strip()
 
-        if Job.job_description_class == "feed-shared-inline-show-more-text":
+        if JobScraper.job_description_class == "feed-shared-inline-show-more-text":
             try:
                 extra_requirements = self.wait_for_element_to_load(name="job-details-about-the-job-module__section")
                 self.job_description += " ||| " + extra_requirements.text.strip()
@@ -149,3 +149,15 @@ class Job(Scraper):
 
         if close_on_complete:
             driver.close()
+
+def extract_job_id(url: str) -> int:
+    # Regular expression to find the job ID
+    match = re.search(r'linkedin.com/jobs/view/(\d+)', url)
+    if match:
+        try:
+            job_id = int(match.group(1))
+            return job_id
+        except ValueError:
+            raise
+    else:
+        return 0  # Flag for error extracting id

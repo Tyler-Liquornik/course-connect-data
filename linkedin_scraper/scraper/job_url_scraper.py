@@ -5,11 +5,11 @@ from typing import List
 from time import sleep
 import urllib.parse
 import pandas as pd
-from linkedin_scraper.scraper import Scraper
-from linkedin_scraper.job_scraper import Job
+from linkedin_scraper.scraper.base_scraper import BaseScraper
+from linkedin_scraper.scraper.job_scraper import JobScraper
 from selenium.webdriver.common.by import By
 
-class JobBase(Scraper):
+class JobUrlScraper(BaseScraper):
 
     AREAS = ["recommended_jobs", None, "still_hiring", "more_jobs"]
 
@@ -46,10 +46,10 @@ class JobBase(Scraper):
             raise NotImplementedError("This part is not implemented yet")
 
     # Return a job object with only the linkedin_url not null
-    def scrape_linkedin_url(self, base_element) -> Job:
+    def scrape_linkedin_url(self, base_element) -> JobScraper:
         job_div = self.wait_for_element_to_load(name="job-card-list__title", base=base_element)
         linkedin_url = job_div.get_attribute("href")
-        return Job(linkedin_url=linkedin_url, scrape=False, driver=self.driver)
+        return JobScraper(linkedin_url=linkedin_url, scrape=False, driver=self.driver)
 
     def scrape_logged_in(self, scrape_recommended_jobs=True):
         driver = self.driver
@@ -71,7 +71,7 @@ class JobBase(Scraper):
         return
 
     # Each Job object has only the LinkedIn url so we can click on it and get job details from there
-    def search_jobs_page_for_linkedin_urls(self, search_term: str, click_to_first_page: bool = True) -> List[Job]:
+    def search_jobs_page_for_linkedin_urls(self, search_term: str, click_to_first_page: bool = True) -> List[JobScraper]:
         if click_to_first_page:
             url = os.path.join(self.base_url, "search") + f"?keywords={urllib.parse.quote(search_term)}&refresh=true"
             self.driver.get(url)
@@ -101,13 +101,13 @@ class JobBase(Scraper):
             job_results.append(job)
         return job_results
 
-    def search_jobs_pages_for_linkedin_urls(self, search_term: str, max_pages: int = sys.maxsize) -> List[Job]:
+    def search_jobs_pages_for_linkedin_urls(self, search_term: str, max_pages: int = sys.maxsize) -> List[JobScraper]:
         try:
             return self.search_jobs_pages_for_linkedin_urls_with_next_button_pagination(search_term, max_pages)
         except:
             return self.search_jobs_pages_for_linkedin_urls_with_ellipsis_button_pagination(search_term, max_pages)
 
-    def search_jobs_pages_for_linkedin_urls_with_next_button_pagination(self, search_term: str, max_pages: int) -> List[Job]:
+    def search_jobs_pages_for_linkedin_urls_with_next_button_pagination(self, search_term: str, max_pages: int) -> List[JobScraper]:
         url = os.path.join(self.base_url, "search") + f"?keywords={urllib.parse.quote(search_term)}&refresh=true"
         self.driver.get(url)
 
@@ -138,7 +138,7 @@ class JobBase(Scraper):
         return all_job_results
 
     def search_jobs_pages_for_linkedin_urls_with_ellipsis_button_pagination(self, search_term: str, max_pages: int) -> \
-    List[Job]:
+    List[JobScraper]:
         url = os.path.join(self.base_url, "search") + f"?keywords={urllib.parse.quote(search_term)}&refresh=true"
         self.driver.get(url)
         self.focus()
