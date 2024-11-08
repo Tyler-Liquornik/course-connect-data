@@ -5,12 +5,13 @@ from typing import List
 from time import sleep
 import urllib.parse
 import pandas as pd
+
+from linkedin_scraper import JobScraper
 from linkedin_scraper.scraper.base_scraper import BaseScraper
-from linkedin_scraper.scraper.job_scraper import JobScraper
+from linkedin_scraper.document.job_document import JobDocument
 from selenium.webdriver.common.by import By
 
 class JobUrlScraper(BaseScraper):
-
     AREAS = ["recommended_jobs", None, "still_hiring", "more_jobs"]
 
     def __init__(self, driver, base_url="https://www.linkedin.com/jobs/", close_on_complete=False, scrape=True,
@@ -19,14 +20,11 @@ class JobUrlScraper(BaseScraper):
         self.driver = driver
         self.base_url = base_url
         self.csv_filename = csv_filename
-
         self.create_or_reset_csv()
-
         if scrape:
             self.scrape(scrape_recommended_jobs)
 
     def create_or_reset_csv(self):
-        # Repeatedly prompt the user to close the CSV file in excel (it can't be open to add the data to it)
         while True:
             try:
                 if os.path.exists(self.csv_filename):
@@ -45,7 +43,6 @@ class JobUrlScraper(BaseScraper):
         else:
             raise NotImplementedError("This part is not implemented yet")
 
-    # Return a job object with only the linkedin_url not null
     def scrape_linkedin_url(self, base_element) -> JobScraper:
         job_div = self.wait_for_element_to_load(name="job-card-list__title", base=base_element)
         linkedin_url = job_div.get_attribute("href")
@@ -70,7 +67,6 @@ class JobUrlScraper(BaseScraper):
                 setattr(self, area_name, area_results)
         return
 
-    # Each Job object has only the LinkedIn url so we can click on it and get job details from there
     def search_jobs_page_for_linkedin_urls(self, search_term: str, click_to_first_page: bool = True) -> List[JobScraper]:
         if click_to_first_page:
             url = os.path.join(self.base_url, "search") + f"?keywords={urllib.parse.quote(search_term)}&refresh=true"
@@ -111,7 +107,6 @@ class JobUrlScraper(BaseScraper):
         url = os.path.join(self.base_url, "search") + f"?keywords={urllib.parse.quote(search_term)}&refresh=true"
         self.driver.get(url)
 
-        # Check for the next button to trigger an exception right away
         try:
             logging.disable(logging.CRITICAL)
             next_button = self.driver.find_element(By.XPATH, "//button[@aria-label='View next page']")
@@ -137,8 +132,7 @@ class JobUrlScraper(BaseScraper):
 
         return all_job_results
 
-    def search_jobs_pages_for_linkedin_urls_with_ellipsis_button_pagination(self, search_term: str, max_pages: int) -> \
-    List[JobScraper]:
+    def search_jobs_pages_for_linkedin_urls_with_ellipsis_button_pagination(self, search_term: str, max_pages: int) -> List[JobScraper]:
         url = os.path.join(self.base_url, "search") + f"?keywords={urllib.parse.quote(search_term)}&refresh=true"
         self.driver.get(url)
         self.focus()
@@ -148,17 +142,12 @@ class JobUrlScraper(BaseScraper):
         current_page = 1
 
         while current_page <= max_pages:
-            # Collect job results on the current page
             job_results = self.search_jobs_page_for_linkedin_urls(search_term, False)
             all_job_results.extend(job_results)
 
             try:
-                # Find the pagination container and locate the selected (current) page button
                 pagination_container = self.driver.find_element(By.CLASS_NAME, "jobs-search-results-list__pagination")
-                selected_button = pagination_container.find_element(By.XPATH,
-                                                                    ".//li[contains(@class, 'active')]/button")
-
-                # Try to find the next sibling of the selected button's parent <li> element
+                selected_button = pagination_container.find_element(By.XPATH, ".//li[contains(@class, 'active')]/button")
                 next_li = selected_button.find_element(By.XPATH, "../following-sibling::li/button")
 
                 if next_li and current_page < max_pages:
@@ -171,3 +160,26 @@ class JobUrlScraper(BaseScraper):
                 break
 
         return all_job_results
+
+    def to_document(self, linkedin_url: str) -> JobDocument:
+        """Create a JobDocument with only linkedin_url and linkedin_job_id populated."""
+        linkedin_job_id = self.extract_job_id(linkedin_url)
+        return JobDocument(
+            linkedin_job_id=linkedin_job_id,
+            linkedin_url=linkedin_url,
+            job_title=None,
+            company=None,
+            company_linkedin_url=None,
+            location=None,
+            posted_date=None,
+            job_description=None
+        )
+
+    @staticmethod
+    def extract_job_id(url: str) -> int:
+        """Extract the job ID from the LinkedIn URL."""
+        import re
+        match = re.search(r'linkedin.com/jobs/view/(\d+)', url)
+        if match:
+            return int(match.group(1))
+        return 0  # Return 0 if job ID extraction fails

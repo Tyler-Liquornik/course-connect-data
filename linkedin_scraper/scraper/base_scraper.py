@@ -69,6 +69,6 @@ class BaseScraper(ABC):
         )
 
     @abstractmethod
-    def to_document(self):
+    def to_document(self, *args, **kwargs):
         """Convert the scraper data to a document format."""
         pass
