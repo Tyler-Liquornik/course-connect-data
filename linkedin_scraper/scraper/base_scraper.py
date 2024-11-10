@@ -1,7 +1,6 @@
 import logging
 from dataclasses import dataclass
 from time import sleep
-from abc import ABC, abstractmethod
 from selenium.common import NoAlertPresentException, TimeoutException
 from selenium.webdriver import Chrome
 from selenium import webdriver
@@ -10,7 +9,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 @dataclass
-class BaseScraper(ABC):
+class BaseScraper:
     driver: Chrome = None
     WAIT_FOR_ELEMENT_TIMEOUT = 1
     TOP_CARD = "pv-top-card"
@@ -67,8 +66,3 @@ class BaseScraper(ABC):
         self.driver.execute_script(
             f'elem = document.getElementsByClassName("{class_name}")[0]; elem.scrollTo(0, elem.scrollHeight*{str(page_percent)});'
         )
-
-    @abstractmethod
-    def to_document(self, *args, **kwargs):
-        """Convert the scraper data to a document format."""
-        pass

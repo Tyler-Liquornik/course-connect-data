@@ -161,20 +161,6 @@ class JobUrlScraper(BaseScraper):
 
         return all_job_results
 
-    def to_document(self, linkedin_url: str) -> JobDocument:
-        """Create a JobDocument with only linkedin_url and linkedin_job_id populated."""
-        linkedin_job_id = self.extract_job_id(linkedin_url)
-        return JobDocument(
-            linkedin_job_id=linkedin_job_id,
-            linkedin_url=linkedin_url,
-            job_title=None,
-            company=None,
-            company_linkedin_url=None,
-            location=None,
-            posted_date=None,
-            job_description=None
-        )
-
     @staticmethod
     def extract_job_id(url: str) -> int:
         """Extract the job ID from the LinkedIn URL."""

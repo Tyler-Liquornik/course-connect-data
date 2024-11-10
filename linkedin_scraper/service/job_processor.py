@@ -2,7 +2,7 @@ import yaml
 import logging
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
-from mongo_client import get_database
+from linkedin_scraper.mongo_client import get_database
 from langdetect import detect
 from googletrans import Translator
 from bson import ObjectId

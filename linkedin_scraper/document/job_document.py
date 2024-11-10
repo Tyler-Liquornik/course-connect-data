@@ -1,5 +1,4 @@
-from mongoengine import StringField, DateTimeField, IntField, URLField, DateField
-from datetime import datetime, timezone
+from mongoengine import StringField, IntField, URLField, DateField
 from linkedin_scraper.document.base_document import BaseDocument
 
 

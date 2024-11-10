@@ -43,18 +43,6 @@ class JobScraper(BaseScraper):
     def __repr__(self):
         return f"<Job {self.job_title} {self.company}>"
 
-    def to_document(self):
-        return JobDocument(
-            linkedin_job_id=self.linkedin_job_id,
-            linkedin_url=self.linkedin_url,
-            job_title=self.job_title,
-            company=self.company,
-            company_linkedin_url=self.company_linkedin_url,
-            location=self.location,
-            posted_date=self.posted_date,
-            job_description=self.job_description,
-        )
-
     def to_dict(self):
         return {
             "linkedin_job_id": self.linkedin_job_id,

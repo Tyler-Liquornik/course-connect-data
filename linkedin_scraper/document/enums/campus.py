@@ -1,6 +1,6 @@
 from enum import Enum
 
-class School(Enum):
+class Campus(Enum):
     WESTERN = "WESTERN"
     HURON = "HURON"
     KINGS = "KINGS"
